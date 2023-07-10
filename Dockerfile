@@ -11,26 +11,35 @@ ARG  FFMPEG_VERSION=4.2.1
 
 # Install dependencies
 RUN apt-get update && \
-	apt-get install -y \
-		wget build-essential ca-certificates \
-		openssl libssl-dev yasm \
-		libpcre3-dev librtmp-dev libtheora-dev \
-		libvorbis-dev libvpx-dev libfreetype6-dev \
-		libmp3lame-dev libx264-dev libx265-dev && \
+    apt-get install -y --no-install-recommends \
+        wget \
+        build-essential \
+        ca-certificates \
+        libssl-dev \
+        yasm \
+        libpcre3-dev \
+        librtmp-dev \
+        libtheora-dev \
+        libvorbis-dev \
+        libvpx-dev \
+        libfreetype6-dev \
+        libmp3lame-dev \
+        libx264-dev \
+        libx265-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Download nginx source
 RUN mkdir -p /tmp/build && \
-	cd /tmp/build && \
-	wget https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && \
-	tar -zxf nginx-${NGINX_VERSION}.tar.gz && \
-	rm nginx-${NGINX_VERSION}.tar.gz
+    cd /tmp/build && \
+    wget https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz && \
+    tar -zxf nginx-${NGINX_VERSION}.tar.gz && \
+    rm nginx-${NGINX_VERSION}.tar.gz
 
 # Download rtmp-module source
 RUN cd /tmp/build && \
     wget https://github.com/arut/nginx-rtmp-module/archive/v${NGINX_RTMP_MODULE_VERSION}.tar.gz && \
     tar -zxf v${NGINX_RTMP_MODULE_VERSION}.tar.gz && \
-	rm v${NGINX_RTMP_MODULE_VERSION}.tar.gz
+    rm v${NGINX_RTMP_MODULE_VERSION}.tar.gz
 
 # Build nginx with nginx-rtmp module
 RUN cd /tmp/build/nginx-${NGINX_VERSION} && \
@@ -50,46 +59,52 @@ RUN cd /tmp/build/nginx-${NGINX_VERSION} && \
 
 # Download ffmpeg source
 RUN cd /tmp/build && \
-  wget http://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.gz && \
-  tar -zxf ffmpeg-${FFMPEG_VERSION}.tar.gz && \
-  rm ffmpeg-${FFMPEG_VERSION}.tar.gz
+    wget http://ffmpeg.org/releases/ffmpeg-${FFMPEG_VERSION}.tar.gz && \
+    tar -zxf ffmpeg-${FFMPEG_VERSION}.tar.gz && \
+    rm ffmpeg-${FFMPEG_VERSION}.tar.gz
 
 # Build ffmpeg
 RUN cd /tmp/build/ffmpeg-${FFMPEG_VERSION} && \
-  ./configure \
-	  --enable-version3 \
-	  --enable-gpl \
-	  --enable-small \
-	  --enable-libx264 \
-	  --enable-libx265 \
-	  --enable-libvpx \
-	  --enable-libtheora \
-	  --enable-libvorbis \
-	  --enable-librtmp \
-	  --enable-postproc \
-	  --enable-swresample \
-	  --enable-libfreetype \
-	  --enable-libmp3lame \
-	  --disable-debug \
-	  --disable-doc \
-	  --disable-ffplay \
-	  --extra-libs="-lpthread -lm" && \
-	make -j $(getconf _NPROCESSORS_ONLN) && \
-	make install
+    ./configure \
+        --enable-version3 \
+        --enable-gpl \
+        --enable-small \
+        --enable-libx264 \
+        --enable-libx265 \
+        --enable-libvpx \
+        --enable-libtheora \
+        --enable-libvorbis \
+        --enable-librtmp \
+        --enable-postproc \
+        --enable-swresample \
+        --enable-libfreetype \
+        --enable-libmp3lame \
+        --disable-debug \
+        --disable-doc \
+        --disable-ffplay \
+        --extra-libs="-lpthread -lm" && \
+    make -j $(getconf _NPROCESSORS_ONLN) && \
+    make install
 
 # Copy stats.xsl file to nginx html directory and cleaning build files
 RUN cp /tmp/build/nginx-rtmp-module-${NGINX_RTMP_MODULE_VERSION}/stat.xsl /usr/local/nginx/html/stat.xsl && \
-	rm -rf /tmp/build
+    rm -rf /tmp/build
 
 ##### Building the final image #####
 FROM debian:${DEBIAN_VERSION}
 
 # Install dependencies
 RUN apt-get update && \
-	apt-get install -y \
-		ca-certificates openssl libpcre3-dev \
-		librtmp1 libtheora0 libvorbis-dev libmp3lame0 \
-		libvpx4 libx264-dev libx265-dev && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        libpcre3-dev \
+        librtmp1 \
+        libtheora0 \
+        libvorbis-dev \
+        libmp3lame0 \
+        libvpx4 \
+        libx264-dev \
+        libx265-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy files from build stage to final stage
@@ -113,4 +128,3 @@ EXPOSE 1935
 EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]
-
