@@ -1,7 +1,7 @@
-ARG DEBIAN_VERSION=buster-slim
+ARG UBUNTU_VERSION=20.04
 
 ##### Building stage #####
-FROM debian:${DEBIAN_VERSION} as builder
+FROM ubuntu:${UBUNTU_VERSION} as builder
 MAINTAINER Tareq Alqutami <tareqaziz2010@gmail.com>
 
 # Versions of nginx, rtmp-module and ffmpeg
@@ -54,7 +54,7 @@ RUN cd /tmp/build/nginx-${NGINX_VERSION} && \
         --with-http_ssl_module \
         --with-threads \
         --add-module=/tmp/build/nginx-rtmp-module-${NGINX_RTMP_MODULE_VERSION} && \
-    make -j $(getconf _NPROCESSORS_ONLN) && \
+    make -j $(nproc) && \
     make install
 
 # Download ffmpeg source
@@ -83,7 +83,7 @@ RUN cd /tmp/build/ffmpeg-${FFMPEG_VERSION} && \
         --disable-doc \
         --disable-ffplay \
         --extra-libs="-lpthread -lm" && \
-    make -j $(getconf _NPROCESSORS_ONLN) && \
+    make -j $(nproc) && \
     make install
 
 # Copy stats.xsl file to nginx html directory and cleaning build files
@@ -91,7 +91,7 @@ RUN cp /tmp/build/nginx-rtmp-module-${NGINX_RTMP_MODULE_VERSION}/stat.xsl /usr/l
     rm -rf /tmp/build
 
 ##### Building the final image #####
-FROM debian:${DEBIAN_VERSION}
+FROM ubuntu:${UBUNTU_VERSION}
 
 # Install dependencies
 RUN apt-get update && \
